@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				cartoon: {
+					'blue': '#D3E4FD',
+					'pink': '#FFDEE2',
+					'yellow': '#FEF7CD',
+					'green': '#F2FCE2',
+					'peach': '#FDE1D3'
 				}
 			},
 			borderRadius: {
@@ -84,11 +92,32 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'bounce': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-20px)' }
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				'spin-slow': {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' }
+				},
+				'price-reveal': {
+					'0%': { transform: 'scale(0)', opacity: '0' },
+					'60%': { transform: 'scale(1.2)', opacity: '1' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce': 'bounce 1s infinite ease-in-out',
+				'fade-in': 'fade-in 0.5s ease-in',
+				'spin-slow': 'spin-slow 3s linear infinite',
+				'price-reveal': 'price-reveal 0.8s ease-out forwards'
 			}
 		}
 	},
