@@ -59,7 +59,22 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     const topPrediction = Array.isArray(result) ? result[0] : result;
     
     // Clean up prediction label (remove categories, etc.)
-    let objectName = topPrediction.label.split(',')[0].trim();
+    // We need to handle both possible return types from the classifier
+    let objectLabel = '';
+    let confidenceScore = 0;
+    
+    if (Array.isArray(result) && result.length > 0) {
+      objectLabel = result[0].label;
+      confidenceScore = result[0].score;
+    } else if ('label' in topPrediction) {
+      objectLabel = topPrediction.label;
+      confidenceScore = topPrediction.score;
+    } else {
+      objectLabel = "Unknown Object";
+      confidenceScore = 0.5;
+    }
+    
+    let objectName = objectLabel.split(',')[0].trim();
     objectName = objectName.replace(/_/g, ' ').toLowerCase();
     
     // Get price range from database or generate a reasonable guess
@@ -74,7 +89,7 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     }
     
     // Generate price within range, weighted by confidence
-    const confidence = topPrediction.score;
+    const confidence = confidenceScore;
     const priceRange50 = (priceRange.maxPrice - priceRange.minPrice) * 0.5;
     const midPoint = priceRange.minPrice + priceRange50;
     
