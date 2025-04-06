@@ -35,9 +35,9 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
   try {
     // Configure transformers.js
     const config = {
-      device: "webgpu" as const, // Using 'as const' to ensure it's the correct type
-      allowLocalModels: false,
-      useBrowserCache: true,
+      device: "webgpu", // Use WebGPU acceleration if available
+      allowLocalModels: false, // Load models from HF hub
+      useBrowserCache: true, // Cache models in browser
     };
 
     console.log("Loading image classification model...");
@@ -56,7 +56,7 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     console.log("Classification result:", result);
 
     // Get the top prediction
-    const topPrediction = Array.isArray(result) ? result[0] : result;
+    const topPrediction = result[0];
     
     // Clean up prediction label (remove categories, etc.)
     let objectName = topPrediction.label.split(',')[0].trim();

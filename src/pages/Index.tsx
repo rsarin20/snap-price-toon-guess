@@ -4,7 +4,7 @@ import CameraComponent from '@/components/Camera';
 import PriceResult from '@/components/PriceResult';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import { predictPrice } from '@/utils/aiPredictor';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
