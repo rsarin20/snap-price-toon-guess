@@ -13,6 +13,8 @@ const Index = () => {
   const [prediction, setPrediction] = useState<{
     price: string;
     objectName: string;
+    manufacturingCost: string;
+    importLocation: string;
     confidence: number;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,8 @@ const Index = () => {
           setPrediction({
             price: result.price,
             objectName: result.objectName,
+            manufacturingCost: result.manufacturingCost,
+            importLocation: result.importLocation,
             confidence: result.confidence
           });
           
@@ -53,6 +57,8 @@ const Index = () => {
           setPrediction({
             price: "$???.??",
             objectName: "Unknown Object",
+            manufacturingCost: "$???.??",
+            importLocation: "Unknown",
             confidence: 0
           });
         } finally {
@@ -107,6 +113,8 @@ const Index = () => {
               <PriceResult 
                 imageData={capturedImage}
                 predictedPrice={prediction?.price || null}
+                manufacturingCost={prediction?.manufacturingCost || null}
+                importLocation={prediction?.importLocation || null}
                 confidence={prediction?.confidence || 0}
                 objectName={prediction?.objectName || ""}
                 isLoading={isLoading}

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 interface PriceResultProps {
   imageData: string;
   predictedPrice: string | null;
+  manufacturingCost: string | null;
+  importLocation: string | null;
   confidence: number;
   objectName: string;
   isLoading: boolean;
@@ -14,6 +16,8 @@ interface PriceResultProps {
 const PriceResult: React.FC<PriceResultProps> = ({ 
   imageData, 
   predictedPrice, 
+  manufacturingCost,
+  importLocation,
   confidence, 
   objectName, 
   isLoading, 
@@ -41,10 +45,25 @@ const PriceResult: React.FC<PriceResultProps> = ({
             
             {predictedPrice && (
               <div className="flex flex-col items-center my-4 animate-price-reveal">
-                <div className="price-tag mb-2">
-                  <p className="text-sm font-bold">Estimated Price:</p>
+                <div className="price-tag mb-4 w-full">
+                  <p className="text-sm font-bold">Estimated Retail Price:</p>
                   <p className="text-3xl font-extrabold">{predictedPrice}</p>
                 </div>
+                
+                {manufacturingCost && (
+                  <div className="price-tag mb-4 w-full bg-cartoon-yellow">
+                    <p className="text-sm font-bold">Est. Manufacturing Cost:</p>
+                    <p className="text-2xl font-bold">{manufacturingCost}</p>
+                  </div>
+                )}
+                
+                {importLocation && (
+                  <div className="price-tag mb-4 w-full bg-cartoon-pink">
+                    <p className="text-sm font-bold">Likely Import From:</p>
+                    <p className="text-2xl font-bold">{importLocation}</p>
+                  </div>
+                )}
+                
                 <div className="w-full mt-2">
                   <div className="text-sm font-medium mb-1 flex justify-between">
                     <span>Confidence</span>

@@ -4,6 +4,8 @@ import { pipeline } from "@huggingface/transformers";
 interface PredictionResult {
   objectName: string;
   price: string;
+  manufacturingCost: string;
+  importLocation: string;
   confidence: number;
 }
 
@@ -30,6 +32,47 @@ const mockPriceDatabase: Record<string, { minPrice: number; maxPrice: number }> 
   "sunglasses": { minPrice: 15, maxPrice: 300 },
   "handbag": { minPrice: 30, maxPrice: 500 },
 };
+
+// Mock manufacturing cost percentages (of retail price)
+const mockManufacturingCostPercentage: Record<string, { min: number; max: number }> = {
+  "electronics": { min: 30, max: 60 },
+  "clothing": { min: 15, max: 40 },
+  "furniture": { min: 25, max: 50 },
+  "toys": { min: 20, max: 45 },
+  "kitchenware": { min: 25, max: 50 },
+  "tools": { min: 35, max: 65 },
+  "default": { min: 25, max: 50 }
+};
+
+// Mock import locations by product category
+const mockImportLocations: Record<string, string[]> = {
+  "electronics": ["China", "Taiwan", "South Korea", "Japan", "Vietnam"],
+  "clothing": ["Bangladesh", "Vietnam", "China", "India", "Indonesia"],
+  "furniture": ["China", "Vietnam", "Mexico", "Malaysia", "Poland"],
+  "toys": ["China", "Vietnam", "Mexico", "Indonesia", "Thailand"],
+  "kitchenware": ["China", "India", "Thailand", "Turkey", "Italy"],
+  "tools": ["China", "Taiwan", "Germany", "USA", "Mexico"],
+  "default": ["China", "Vietnam", "India", "Mexico", "USA"]
+};
+
+// Helper function to categorize products
+function categorizeProduct(objectName: string): string {
+  const electronics = ["laptop", "smartphone", "headphones", "television", "camera", "monitor", "tablet"];
+  const clothing = ["shoes", "jacket", "handbag", "sunglasses", "backpack"];
+  const furniture = ["chair", "table", "lamp"];
+  const toys = ["toy", "game", "doll", "figurine"];
+  const kitchenware = ["bottle", "cup", "plate", "pot", "pan"];
+  const tools = ["keyboard", "mouse", "tool"];
+
+  if (electronics.some(item => objectName.includes(item))) return "electronics";
+  if (clothing.some(item => objectName.includes(item))) return "clothing";
+  if (furniture.some(item => objectName.includes(item))) return "furniture";
+  if (toys.some(item => objectName.includes(item))) return "toys";
+  if (kitchenware.some(item => objectName.includes(item))) return "kitchenware";
+  if (tools.some(item => objectName.includes(item))) return "tools";
+  
+  return "default";
+}
 
 export async function predictPrice(imageData: string): Promise<PredictionResult> {
   try {
@@ -66,7 +109,7 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     if (Array.isArray(result) && result.length > 0) {
       objectLabel = result[0].label;
       confidenceScore = result[0].score;
-    } else if ('label' in topPrediction) {
+    } else if (topPrediction && typeof topPrediction === 'object' && 'label' in topPrediction) {
       objectLabel = topPrediction.label;
       confidenceScore = topPrediction.score;
     } else {
@@ -102,10 +145,30 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
       style: 'currency',
       currency: 'USD',
     }).format(estimatedPrice);
+
+    // Determine product category for manufacturing cost and import location
+    const category = categorizeProduct(objectName);
+    
+    // Calculate manufacturing cost
+    const costPercentage = mockManufacturingCostPercentage[category] || mockManufacturingCostPercentage.default;
+    const costPercent = costPercentage.min + (Math.random() * (costPercentage.max - costPercentage.min));
+    const manufacturingCost = estimatedPrice * (costPercent / 100);
+    
+    // Format the manufacturing cost
+    const formattedManufacturingCost = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(manufacturingCost);
+
+    // Determine likely import location
+    const possibleLocations = mockImportLocations[category] || mockImportLocations.default;
+    const importLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
     
     return {
       objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),
       price: formattedPrice,
+      manufacturingCost: formattedManufacturingCost,
+      importLocation,
       confidence: confidence
     };
   } catch (error) {
@@ -115,6 +178,8 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     return {
       objectName: "Unknown Object",
       price: "$99.99",
+      manufacturingCost: "$45.00",
+      importLocation: "Unknown",
       confidence: 0.5
     };
   }
