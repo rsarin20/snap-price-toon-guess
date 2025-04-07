@@ -27,7 +27,7 @@ const Index = () => {
       setIsLoading(true);
       
       // Show loading toast
-      const loadingToast = toast.loading("Analyzing your image...");
+      const loadingToast = toast.loading("Analyzing your image with AI...");
       
       // Process with AI (with a small delay to show loading state)
       setTimeout(async () => {
@@ -43,7 +43,7 @@ const Index = () => {
           });
           
           // Show success toast
-          toast.success("Price prediction complete!", {
+          toast.success("AI analysis complete!", {
             id: loadingToast
           });
         } catch (error) {

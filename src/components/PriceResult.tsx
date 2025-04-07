@@ -40,13 +40,13 @@ const PriceResult: React.FC<PriceResultProps> = ({
       ) : (
         <div className="w-full">
           <div className="p-6 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow mb-4 animate-fade-in">
-            <h2 className="text-xl font-bold mb-2">We think this is:</h2>
+            <h2 className="text-xl font-bold mb-2">AI thinks this is:</h2>
             <p className="text-2xl font-extrabold mb-4">{objectName}</p>
             
             {predictedPrice && (
               <div className="flex flex-col items-center my-4 animate-price-reveal">
                 <div className="price-tag mb-4 w-full">
-                  <p className="text-sm font-bold">Estimated Retail Price:</p>
+                  <p className="text-sm font-bold">AI Estimated Price:</p>
                   <p className="text-3xl font-extrabold">{predictedPrice}</p>
                 </div>
                 
@@ -66,7 +66,7 @@ const PriceResult: React.FC<PriceResultProps> = ({
                 
                 <div className="w-full mt-2">
                   <div className="text-sm font-medium mb-1 flex justify-between">
-                    <span>Confidence</span>
+                    <span>AI Confidence</span>
                     <span>{Math.round(confidence * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-4 cartoon-border overflow-hidden">

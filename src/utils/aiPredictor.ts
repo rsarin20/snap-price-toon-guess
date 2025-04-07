@@ -78,7 +78,7 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
   try {
     // Configure transformers.js
     const config = {
-      device: "webgpu" as const, // Using 'as const' to ensure it's the correct type
+      device: "webgpu" as const,
       allowLocalModels: false,
       useBrowserCache: true,
     };
@@ -99,19 +99,19 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     console.log("Classification result:", result);
 
     // Get the top prediction
-    const topPrediction = Array.isArray(result) ? result[0] : result;
-    
-    // Clean up prediction label (remove categories, etc.)
-    // We need to handle both possible return types from the classifier
     let objectLabel = '';
     let confidenceScore = 0;
     
     if (Array.isArray(result) && result.length > 0) {
-      objectLabel = result[0].label;
-      confidenceScore = result[0].score;
-    } else if (topPrediction && typeof topPrediction === 'object' && 'label' in topPrediction) {
-      objectLabel = topPrediction.label;
-      confidenceScore = topPrediction.score;
+      objectLabel = result[0].label || '';
+      confidenceScore = result[0].score || 0;
+    } else if (result && typeof result === 'object') {
+      // Handle different possible response formats
+      const firstResult = Array.isArray((result as any).results) ? 
+        (result as any).results[0] : result;
+      
+      objectLabel = firstResult.label || '';
+      confidenceScore = firstResult.score || 0;
     } else {
       objectLabel = "Unknown Object";
       confidenceScore = 0.5;
@@ -119,6 +119,8 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     
     let objectName = objectLabel.split(',')[0].trim();
     objectName = objectName.replace(/_/g, ' ').toLowerCase();
+    
+    console.log("Detected object:", objectName, "with confidence:", confidenceScore);
     
     // Get price range from database or generate a reasonable guess
     let priceRange = mockPriceDatabase[objectName.toLowerCase()];
@@ -163,6 +165,9 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     // Determine likely import location
     const possibleLocations = mockImportLocations[category] || mockImportLocations.default;
     const importLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
+    
+    // TODO: In a production app, you would send the image to OpenAI API here 
+    // and use their vision capabilities to get more accurate results
     
     return {
       objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),
