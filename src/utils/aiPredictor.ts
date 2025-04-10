@@ -1,6 +1,4 @@
 
-import { pipeline } from "@huggingface/transformers";
-
 interface PredictionResult {
   objectName: string;
   price: string;
@@ -9,7 +7,7 @@ interface PredictionResult {
   confidence: number;
 }
 
-// Mock prices for testing - in a real app this would be replaced with a more sophisticated model
+// Fallback mock prices for when OpenAI API is unavailable
 const mockPriceDatabase: Record<string, { minPrice: number; maxPrice: number }> = {
   "laptop": { minPrice: 800, maxPrice: 2000 },
   "smartphone": { minPrice: 400, maxPrice: 1200 },
@@ -76,6 +74,103 @@ function categorizeProduct(objectName: string): string {
 
 export async function predictPrice(imageData: string): Promise<PredictionResult> {
   try {
+    // Remove the data URL prefix to get the base64 string
+    const base64Image = imageData.replace(/^data:image\/[a-z]+;base64,/, "");
+    
+    // Call OpenAI API for image analysis
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem("OPENAI_API_KEY")}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional product analyst. Analyze the image provided and identify the object, estimate its retail price in USD, manufacturing cost, and likely country of import. Be accurate and concise."
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "What is this object? Provide the following in a JSON format: \n1. name: the object name\n2. price: estimated retail price in USD\n3. manufacturingCost: estimated manufacturing cost in USD\n4. importLocation: likely country of import\n5. confidence: a decimal between 0 and 1 representing your confidence level"
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 300
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("OpenAI API response:", data);
+    
+    // Parse the response to extract the JSON data
+    let jsonResponse = {};
+    try {
+      const content = data.choices[0].message.content;
+      // Extract JSON from the response (it might be embedded in text)
+      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || 
+                        content.match(/\{[\s\S]*?\}/);
+                        
+      if (jsonMatch) {
+        jsonResponse = JSON.parse(jsonMatch[0]);
+      } else {
+        // Try to parse the entire content as JSON
+        jsonResponse = JSON.parse(content);
+      }
+      
+      console.log("Parsed OpenAI response:", jsonResponse);
+    } catch (err) {
+      console.error("Error parsing OpenAI response:", err);
+      // Fall back to local processing if JSON parsing fails
+      return fallbackPrediction(imageData);
+    }
+    
+    // Extract values from the parsed JSON
+    const objectName = jsonResponse.name || "Unknown Object";
+    const price = typeof jsonResponse.price === 'number' 
+      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(jsonResponse.price)
+      : jsonResponse.price || "$99.99";
+    const manufacturingCost = typeof jsonResponse.manufacturingCost === 'number'
+      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(jsonResponse.manufacturingCost)
+      : jsonResponse.manufacturingCost || "$45.00";
+    const importLocation = jsonResponse.importLocation || "Unknown";
+    const confidence = jsonResponse.confidence || 0.8;
+
+    return {
+      objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),
+      price,
+      manufacturingCost,
+      importLocation,
+      confidence
+    };
+  } catch (error) {
+    console.error("Error in OpenAI prediction:", error);
+    // Fall back to local processing if there's an error with the OpenAI API
+    return fallbackPrediction(imageData);
+  }
+}
+
+// Fallback function using transformers.js for when OpenAI API fails
+async function fallbackPrediction(imageData: string): Promise<PredictionResult> {
+  try {
+    console.log("Using fallback prediction with transformers.js");
+    const { pipeline } = await import("@huggingface/transformers");
+    
     // Configure transformers.js
     const config = {
       device: "webgpu" as const,
@@ -105,13 +200,6 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     if (Array.isArray(result) && result.length > 0) {
       objectLabel = result[0].label || '';
       confidenceScore = result[0].score || 0;
-    } else if (result && typeof result === 'object') {
-      // Handle different possible response formats
-      const firstResult = Array.isArray((result as any).results) ? 
-        (result as any).results[0] : result;
-      
-      objectLabel = firstResult.label || '';
-      confidenceScore = firstResult.score || 0;
     } else {
       objectLabel = "Unknown Object";
       confidenceScore = 0.5;
@@ -166,9 +254,6 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     const possibleLocations = mockImportLocations[category] || mockImportLocations.default;
     const importLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
     
-    // TODO: In a production app, you would send the image to OpenAI API here 
-    // and use their vision capabilities to get more accurate results
-    
     return {
       objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),
       price: formattedPrice,
@@ -177,9 +262,9 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
       confidence: confidence
     };
   } catch (error) {
-    console.error("Error in AI prediction:", error);
+    console.error("Error in fallback prediction:", error);
     
-    // Fallback response in case of error
+    // Ultimate fallback response in case of error
     return {
       objectName: "Unknown Object",
       price: "$99.99",

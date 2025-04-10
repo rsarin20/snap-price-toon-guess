@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Lightbulb, Gift, MapPin } from 'lucide-react';
 
 interface PriceResultProps {
   imageData: string;
@@ -34,32 +35,41 @@ const PriceResult: React.FC<PriceResultProps> = ({
           <div className="flex items-center justify-center mb-4">
             <div className="h-14 w-14 border-4 border-primary border-t-transparent rounded-full animate-spin-slow"></div>
           </div>
-          <p className="text-lg font-bold">Analyzing your object...</p>
+          <p className="text-lg font-bold">Analyzing with OpenAI...</p>
           <p className="text-sm">Our AI is trying to guess the price!</p>
         </div>
       ) : (
         <div className="w-full">
           <div className="p-6 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow mb-4 animate-fade-in">
-            <h2 className="text-xl font-bold mb-2">AI thinks this is:</h2>
+            <h2 className="text-xl font-bold mb-2">
+              <Lightbulb className="inline-block mr-2" size={20} />
+              OpenAI thinks this is:
+            </h2>
             <p className="text-2xl font-extrabold mb-4">{objectName}</p>
             
             {predictedPrice && (
               <div className="flex flex-col items-center my-4 animate-price-reveal">
                 <div className="price-tag mb-4 w-full">
-                  <p className="text-sm font-bold">AI Estimated Price:</p>
+                  <p className="text-sm font-bold">OpenAI Estimated Price:</p>
                   <p className="text-3xl font-extrabold">{predictedPrice}</p>
                 </div>
                 
                 {manufacturingCost && (
                   <div className="price-tag mb-4 w-full bg-cartoon-yellow">
-                    <p className="text-sm font-bold">Est. Manufacturing Cost:</p>
+                    <p className="text-sm font-bold">
+                      <Gift className="inline-block mr-2" size={16} />
+                      Est. Manufacturing Cost:
+                    </p>
                     <p className="text-2xl font-bold">{manufacturingCost}</p>
                   </div>
                 )}
                 
                 {importLocation && (
                   <div className="price-tag mb-4 w-full bg-cartoon-pink">
-                    <p className="text-sm font-bold">Likely Import From:</p>
+                    <p className="text-sm font-bold">
+                      <MapPin className="inline-block mr-2" size={16} />
+                      Likely Import From:
+                    </p>
                     <p className="text-2xl font-bold">{importLocation}</p>
                   </div>
                 )}
