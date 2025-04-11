@@ -1,9 +1,10 @@
+
 import { PredictionResult } from '../types/prediction';
 
 export async function predictWithOpenAI(base64Image: string): Promise<PredictionResult> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem("OPENAI_API_KEY");
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing OpenAI API key.");
+    throw new Error("Missing OpenAI API key in environment configuration.");
   }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -23,7 +24,7 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
           1. The specific name of the object
           2. A realistic retail price in USD based on current market values
           3. An estimated manufacturing cost in USD
-          4. The most likely country of import/manufacture
+          4. The most likely country or region of manufacture
           5. Your confidence level (0.0-1.0)
           
           Your output must be a valid JSON object with the keys: name, price, manufacturingCost, importLocation, and confidence.
