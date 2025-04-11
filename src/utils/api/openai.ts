@@ -2,16 +2,11 @@
 import { PredictionResult } from '../types/prediction';
 
 export async function predictWithOpenAI(base64Image: string): Promise<PredictionResult> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing OpenAI API key in environment configuration.");
-  }
-
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
+      "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem("OPENAI_API_KEY")}`
     },
     body: JSON.stringify({
       model: "gpt-4o",
@@ -24,7 +19,7 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
           1. The specific name of the object
           2. A realistic retail price in USD based on current market values
           3. An estimated manufacturing cost in USD
-          4. The most likely country or region of manufacture
+          4. The most likely country of import/manufacture
           5. Your confidence level (0.0-1.0)
           
           Your output must be a valid JSON object with the keys: name, price, manufacturingCost, importLocation, and confidence.
@@ -48,7 +43,7 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
         }
       ],
       max_tokens: 500,
-      temperature: 0.3
+      temperature: 0.3 // Lower temperature for more consistent results
     })
   });
 
@@ -57,60 +52,62 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
   }
 
   const data = await response.json();
-  console.group("OpenAI Debug");
-  console.log("Full response:", data);
+  console.log("OpenAI API response:", data);
+  
+  // Parse the response to extract the JSON data
   let parsedResponse: Record<string, any> = {};
-
   try {
-    const content = data.choices[0]?.message?.content;
+    const content = data.choices[0].message.content;
     console.log("Raw content:", content);
-
+    
+    // Try multiple parsing strategies
     if (content) {
-      const jsonMatch =
-        content.match(/```json\s*([\s\S]*?)```/) ||
-        content.match(/```([\s\S]*?)```/) ||
-        content.match(/(\{[\s\S]*\})/);
-
-      if (jsonMatch && jsonMatch[1]) {
-        parsedResponse = JSON.parse(jsonMatch[1].trim());
-      } else if (jsonMatch && jsonMatch[0]) {
-        parsedResponse = JSON.parse(jsonMatch[0].trim());
+      // Strategy 1: Look for JSON block
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
+                        content.match(/\{[\s\S]*\}/);
+                        
+      if (jsonMatch) {
+        const jsonContent = jsonMatch[0].replace(/```json|```/g, '').trim();
+        parsedResponse = JSON.parse(jsonContent);
+        console.log("Found JSON block:", parsedResponse);
       } else {
-        parsedResponse = JSON.parse(content.trim());
+        // Strategy 2: Parse the entire content
+        parsedResponse = JSON.parse(content);
+        console.log("Parsed entire content:", parsedResponse);
       }
     }
-
+    
+    // Validate the parsed response has all required fields
     if (!parsedResponse.name || !parsedResponse.price) {
       throw new Error("Invalid response format");
     }
+    
   } catch (err) {
     console.error("Error parsing OpenAI response:", err);
-    throw err;
+    throw err; // Let the fallback mechanism handle it
   }
-
-  console.log("Parsed response:", parsedResponse);
-  console.groupEnd();
-
+  
+  // Extract and format values from the parsed JSON
   const objectName = parsedResponse.name || "Unknown Object";
-
-  // Format price
+  
+  // Handle different price formats
   let price = parsedResponse.price;
   if (typeof price === 'number') {
     price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
   } else if (typeof price === 'string' && !price.includes('$')) {
     price = `$${price}`;
   }
-
-  // Format manufacturing cost
+  
+  // Handle different manufacturing cost formats
   let manufacturingCost = parsedResponse.manufacturingCost;
   if (typeof manufacturingCost === 'number') {
     manufacturingCost = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(manufacturingCost);
   } else if (typeof manufacturingCost === 'string' && !manufacturingCost.includes('$')) {
     manufacturingCost = `$${manufacturingCost}`;
   }
-
+  
   const importLocation = parsedResponse.importLocation || "Unknown";
-  const confidence = typeof parsedResponse.confidence === 'number' ? parsedResponse.confidence : 0.8;
+  const confidence = parsedResponse.confidence || 0.8;
 
   return {
     objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),

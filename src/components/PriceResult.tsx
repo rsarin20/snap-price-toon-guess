@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Gift, Factory, Gauge } from 'lucide-react';
+import { Lightbulb, Gift, MapPin, Gauge } from 'lucide-react';
 
 interface PriceResultProps {
   imageData: string;
@@ -23,6 +24,7 @@ const PriceResult: React.FC<PriceResultProps> = ({
   isLoading, 
   onReset 
 }) => {
+  // Helper function to get confidence color and label
   const getConfidenceDetails = (score: number) => {
     if (score >= 0.8) return { color: 'bg-green-500', label: 'High Confidence' };
     if (score >= 0.5) return { color: 'bg-yellow-500', label: 'Medium Confidence' };
@@ -37,7 +39,15 @@ const PriceResult: React.FC<PriceResultProps> = ({
         <img src={imageData} alt="Captured object" className="w-full h-full object-cover" />
       </div>
 
-      {!isLoading && (
+      {isLoading ? (
+        <div className="w-full p-6 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="h-14 w-14 border-4 border-primary border-t-transparent rounded-full animate-spin-slow"></div>
+          </div>
+          <p className="text-lg font-bold">Analyzing with OpenAI...</p>
+          <p className="text-sm">Our AI is trying to guess the price!</p>
+        </div>
+      ) : (
         <div className="w-full">
           <div className="p-6 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow mb-4 animate-fade-in">
             <h2 className="text-xl font-bold mb-2">
@@ -66,8 +76,8 @@ const PriceResult: React.FC<PriceResultProps> = ({
                 {importLocation && (
                   <div className="price-tag mb-4 w-full bg-cartoon-pink">
                     <p className="text-sm font-bold">
-                      <Factory className="inline-block mr-2" size={16} />
-                      Likely Region of Manufacture:
+                      <MapPin className="inline-block mr-2" size={16} />
+                      Likely Import From:
                     </p>
                     <p className="text-2xl font-bold">{importLocation}</p>
                   </div>
