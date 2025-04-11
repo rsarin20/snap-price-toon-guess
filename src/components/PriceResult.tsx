@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Gift, MapPin } from 'lucide-react';
+import { Lightbulb, Gift, MapPin, Gauge } from 'lucide-react';
 
 interface PriceResultProps {
   imageData: string;
@@ -24,6 +24,15 @@ const PriceResult: React.FC<PriceResultProps> = ({
   isLoading, 
   onReset 
 }) => {
+  // Helper function to get confidence color and label
+  const getConfidenceDetails = (score: number) => {
+    if (score >= 0.8) return { color: 'bg-green-500', label: 'High Confidence' };
+    if (score >= 0.5) return { color: 'bg-yellow-500', label: 'Medium Confidence' };
+    return { color: 'bg-red-500', label: 'Low Confidence' };
+  };
+  
+  const confidenceDetails = getConfidenceDetails(confidence);
+  
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto">
       <div className="w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden cartoon-border cartoon-shadow mb-4">
@@ -76,12 +85,15 @@ const PriceResult: React.FC<PriceResultProps> = ({
                 
                 <div className="w-full mt-2">
                   <div className="text-sm font-medium mb-1 flex justify-between">
-                    <span>AI Confidence</span>
+                    <span className="flex items-center">
+                      <Gauge className="inline-block mr-1" size={16} />
+                      AI Confidence ({confidenceDetails.label})
+                    </span>
                     <span>{Math.round(confidence * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-4 cartoon-border overflow-hidden">
                     <div 
-                      className="bg-primary h-full cartoon-shadow" 
+                      className={`${confidenceDetails.color} h-full cartoon-shadow`} 
                       style={{ width: `${Math.round(confidence * 100)}%` }}
                     />
                   </div>

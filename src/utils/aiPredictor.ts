@@ -89,14 +89,25 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
         messages: [
           {
             role: "system",
-            content: "You are a professional product analyst. Analyze the image provided and identify the object, estimate its retail price in USD, manufacturing cost, and likely country of import. Be accurate and concise."
+            content: `You are a product analysis AI specializing in identifying objects from images and providing accurate price estimates, manufacturing costs, and likely import origins. 
+            
+            Analyze the image with high accuracy and provide:
+            1. The specific name of the object
+            2. A realistic retail price in USD based on current market values
+            3. An estimated manufacturing cost in USD
+            4. The most likely country of import/manufacture
+            5. Your confidence level (0.0-1.0)
+            
+            Your output must be a valid JSON object with the keys: name, price, manufacturingCost, importLocation, and confidence.
+            For prices, include the dollar sign and decimal places: "$XX.XX"
+            Be as specific as possible about the object, including brand name if recognizable.`
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "What is this object? Provide the following in a JSON format: \n1. name: the object name\n2. price: estimated retail price in USD\n3. manufacturingCost: estimated manufacturing cost in USD\n4. importLocation: likely country of import\n5. confidence: a decimal between 0 and 1 representing your confidence level"
+                text: "What is this object? Provide ONLY a JSON response with these exact keys: name, price, manufacturingCost, importLocation, confidence"
               },
               {
                 type: "image_url",
@@ -107,7 +118,8 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
             ]
           }
         ],
-        max_tokens: 300
+        max_tokens: 500,
+        temperature: 0.3 // Lower temperature for more consistent results
       })
     });
 
@@ -119,37 +131,59 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     console.log("OpenAI API response:", data);
     
     // Parse the response to extract the JSON data
-    let jsonResponse = {};
+    let parsedResponse: Record<string, any> = {};
     try {
       const content = data.choices[0].message.content;
-      // Extract JSON from the response (it might be embedded in text)
-      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || 
-                        content.match(/\{[\s\S]*?\}/);
-                        
-      if (jsonMatch) {
-        jsonResponse = JSON.parse(jsonMatch[0]);
-      } else {
-        // Try to parse the entire content as JSON
-        jsonResponse = JSON.parse(content);
+      console.log("Raw content:", content);
+      
+      // Try multiple parsing strategies
+      if (content) {
+        // Strategy 1: Look for JSON block
+        const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
+                          content.match(/\{[\s\S]*\}/);
+                          
+        if (jsonMatch) {
+          const jsonContent = jsonMatch[0].replace(/```json|```/g, '').trim();
+          parsedResponse = JSON.parse(jsonContent);
+          console.log("Found JSON block:", parsedResponse);
+        } else {
+          // Strategy 2: Parse the entire content
+          parsedResponse = JSON.parse(content);
+          console.log("Parsed entire content:", parsedResponse);
+        }
       }
       
-      console.log("Parsed OpenAI response:", jsonResponse);
+      // Validate the parsed response has all required fields
+      if (!parsedResponse.name || !parsedResponse.price) {
+        throw new Error("Invalid response format");
+      }
+      
     } catch (err) {
       console.error("Error parsing OpenAI response:", err);
-      // Fall back to local processing if JSON parsing fails
-      return fallbackPrediction(imageData);
+      throw err; // Let the fallback mechanism handle it
     }
     
-    // Extract values from the parsed JSON
-    const objectName = jsonResponse.name || "Unknown Object";
-    const price = typeof jsonResponse.price === 'number' 
-      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(jsonResponse.price)
-      : jsonResponse.price || "$99.99";
-    const manufacturingCost = typeof jsonResponse.manufacturingCost === 'number'
-      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(jsonResponse.manufacturingCost)
-      : jsonResponse.manufacturingCost || "$45.00";
-    const importLocation = jsonResponse.importLocation || "Unknown";
-    const confidence = jsonResponse.confidence || 0.8;
+    // Extract and format values from the parsed JSON
+    const objectName = parsedResponse.name || "Unknown Object";
+    
+    // Handle different price formats
+    let price = parsedResponse.price;
+    if (typeof price === 'number') {
+      price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    } else if (typeof price === 'string' && !price.includes('$')) {
+      price = `$${price}`;
+    }
+    
+    // Handle different manufacturing cost formats
+    let manufacturingCost = parsedResponse.manufacturingCost;
+    if (typeof manufacturingCost === 'number') {
+      manufacturingCost = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(manufacturingCost);
+    } else if (typeof manufacturingCost === 'string' && !manufacturingCost.includes('$')) {
+      manufacturingCost = `$${manufacturingCost}`;
+    }
+    
+    const importLocation = parsedResponse.importLocation || "Unknown";
+    const confidence = parsedResponse.confidence || 0.8;
 
     return {
       objectName: objectName.charAt(0).toUpperCase() + objectName.slice(1),
@@ -198,8 +232,12 @@ async function fallbackPrediction(imageData: string): Promise<PredictionResult> 
     let confidenceScore = 0;
     
     if (Array.isArray(result) && result.length > 0) {
-      objectLabel = result[0].label || '';
-      confidenceScore = result[0].score || 0;
+      // Safely access properties using type checking
+      const topResult = result[0];
+      if (topResult && typeof topResult === 'object') {
+        objectLabel = 'label' in topResult ? String(topResult.label) : '';
+        confidenceScore = 'score' in topResult ? Number(topResult.score) : 0;
+      }
     } else {
       objectLabel = "Unknown Object";
       confidenceScore = 0.5;
