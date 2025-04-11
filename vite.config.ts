@@ -1,22 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-}));
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  define: {
+    'import.meta.env.VITE_OPENAI_API_KEY': JSON.stringify('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')
+  }
+});
