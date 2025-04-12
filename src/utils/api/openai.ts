@@ -15,16 +15,17 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
           role: "system",
           content: `You are a product analysis AI specializing in identifying objects from images and providing accurate price estimates, manufacturing costs, and likely import origins. 
           
-          Analyze the image with high accuracy and provide:
-          1. The specific name of the object
+          Analyze the image with extremely high accuracy and provide:
+          1. The specific name of the object with brand name if visible
           2. A realistic retail price in USD based on current market values
           3. An estimated manufacturing cost in USD
-          4. The most likely country of import/manufacture
+          4. The most likely country or region of manufacture
           5. Your confidence level (0.0-1.0)
           
           Your output must be a valid JSON object with the keys: name, price, manufacturingCost, importLocation, and confidence.
           For prices, include the dollar sign and decimal places: "$XX.XX"
-          Be as specific as possible about the object, including brand name if recognizable.`
+          Be as specific as possible about the object, including brand name if recognizable.
+          Ensure your confidence level accurately reflects your certainty about the identification and pricing.`
         },
         {
           role: "user",
@@ -42,8 +43,8 @@ export async function predictWithOpenAI(base64Image: string): Promise<Prediction
           ]
         }
       ],
-      max_tokens: 500,
-      temperature: 0.3 // Lower temperature for more consistent results
+      max_tokens: 800,
+      temperature: 0.2 // Lower temperature for more consistent results
     })
   });
 

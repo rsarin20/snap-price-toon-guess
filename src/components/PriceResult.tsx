@@ -44,22 +44,22 @@ const PriceResult: React.FC<PriceResultProps> = ({
           <div className="flex items-center justify-center mb-4">
             <div className="h-14 w-14 border-4 border-primary border-t-transparent rounded-full animate-spin-slow"></div>
           </div>
-          <p className="text-lg font-bold">Analyzing with OpenAI...</p>
-          <p className="text-sm">Our AI is trying to guess the price!</p>
+          <p className="text-lg font-bold">Analyzing your image...</p>
+          <p className="text-sm">We are trying to determine the price!</p>
         </div>
       ) : (
         <div className="w-full">
           <div className="p-6 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow mb-4 animate-fade-in">
             <h2 className="text-xl font-bold mb-2">
               <Lightbulb className="inline-block mr-2" size={20} />
-              OpenAI thinks this is:
+              We think this is:
             </h2>
             <p className="text-2xl font-extrabold mb-4">{objectName}</p>
             
             {predictedPrice && (
               <div className="flex flex-col items-center my-4 animate-price-reveal">
                 <div className="price-tag mb-4 w-full">
-                  <p className="text-sm font-bold">OpenAI Estimated Price:</p>
+                  <p className="text-sm font-bold">Estimated Price:</p>
                   <p className="text-3xl font-extrabold">{predictedPrice}</p>
                 </div>
                 
@@ -77,7 +77,7 @@ const PriceResult: React.FC<PriceResultProps> = ({
                   <div className="price-tag mb-4 w-full bg-cartoon-pink">
                     <p className="text-sm font-bold">
                       <MapPin className="inline-block mr-2" size={16} />
-                      Likely Import From:
+                      Likely Region of Manufacture:
                     </p>
                     <p className="text-2xl font-bold">{importLocation}</p>
                   </div>
@@ -87,7 +87,7 @@ const PriceResult: React.FC<PriceResultProps> = ({
                   <div className="text-sm font-medium mb-1 flex justify-between">
                     <span className="flex items-center">
                       <Gauge className="inline-block mr-1" size={16} />
-                      AI Confidence ({confidenceDetails.label})
+                      Analysis Confidence ({confidenceDetails.label})
                     </span>
                     <span>{Math.round(confidence * 100)}%</span>
                   </div>

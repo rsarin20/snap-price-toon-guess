@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import CameraComponent from '@/components/Camera';
 import PriceResult from '@/components/PriceResult';
@@ -51,7 +50,7 @@ const Index = () => {
       setIsLoading(true);
       
       // Show loading toast
-      const loadingToast = toast.loading("Analyzing with OpenAI vision models...");
+      const loadingToast = toast.loading("Analyzing your image...");
       
       // Process with AI
       try {
@@ -66,7 +65,7 @@ const Index = () => {
         });
         
         // Show success toast
-        toast.success("OpenAI analysis complete!", {
+        toast.success("Analysis complete!", {
           id: loadingToast
         });
       } catch (error) {
@@ -120,7 +119,7 @@ const Index = () => {
               <p className="text-gray-600">
                 {step === 'camera' 
                   ? 'Snap a clear photo of any object' 
-                  : 'Here\'s our best guess using OpenAI!'}
+                  : 'Here\'s our best price estimate!'}
               </p>
             )}
           </header>
@@ -135,12 +134,12 @@ const Index = () => {
                 <div className="mb-6">
                   <div className="w-full p-4 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow">
                     <h2 className="text-lg font-bold mb-2">OpenAI API Key Required</h2>
-                    <p className="text-sm mb-4">To use the OpenAI vision models for more accurate price prediction, please enter your OpenAI API key.</p>
+                    <p className="text-sm mb-4">To use the vision models for more accurate price prediction, please enter your API key.</p>
                     
                     <form onSubmit={handleApiKeySubmit} className="space-y-4">
                       <Input 
                         type="password"
-                        placeholder="Enter your OpenAI API key"
+                        placeholder="Enter your API key"
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                         className="cartoon-border"
@@ -188,7 +187,7 @@ const Index = () => {
           
           <footer className="text-center mt-8 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-500">
-              PriceSnap © 2025 - Using OpenAI Vision
+              PriceSnap © 2025
             </p>
           </footer>
         </div>
