@@ -2,6 +2,7 @@
 import { PredictionResult } from './types/prediction';
 import { predictWithOpenAI } from './api/openai';
 import { fallbackPrediction } from './prediction/fallback';
+import { storeApiKey } from './security/keyManager';
 
 export async function predictPrice(imageData: string): Promise<PredictionResult> {
   try {
@@ -19,4 +20,13 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
     // Fall back to local processing if there's an error with the OpenAI API
     return fallbackPrediction(imageData);
   }
+}
+
+// Function to set a custom API key
+export function setCustomApiKey(apiKey: string): void {
+  if (apiKey && apiKey.trim() !== '') {
+    storeApiKey(apiKey.trim());
+    return true;
+  }
+  return false;
 }

@@ -1,13 +1,18 @@
 import { PredictionResult } from '../types/prediction';
+import { getSecureApiKey } from '../security/keyManager';
 
 export async function predictWithOpenAI(base64Image: string): Promise<PredictionResult> {
   // Log to help with debugging
   console.log("Starting OpenAI API call");
   
-  // Updated API key as requested
-  const apiKey = "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";
-  
   try {
+    // Get API key securely
+    const apiKey = await getSecureApiKey();
+    
+    if (!apiKey) {
+      throw new Error("API key not available");
+    }
+    
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
