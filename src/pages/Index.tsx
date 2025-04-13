@@ -5,13 +5,11 @@ import WelcomeScreen from '@/components/WelcomeScreen';
 import { predictPrice } from '@/utils/aiPredictor';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const [step, setStep] = useState<'welcome' | 'camera' | 'result' | 'apikey'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'camera' | 'result'>('welcome');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string>('');
   const [prediction, setPrediction] = useState<{
     price: string;
     objectName: string;
@@ -21,27 +19,6 @@ const Index = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
-
-  // Check if API key exists
-  useEffect(() => {
-    const storedApiKey = localStorage.getItem('OPENAI_API_KEY');
-    const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    
-    if (!storedApiKey && !envApiKey && step === 'welcome') {
-      setStep('apikey');
-    }
-  }, [step]);
-
-  const handleApiKeySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (apiKey.trim()) {
-      localStorage.setItem('OPENAI_API_KEY', apiKey.trim());
-      toast.success('API key saved successfully');
-      setStep('welcome');
-    } else {
-      toast.error('Please enter a valid API key');
-    }
-  };
 
   const handleCaptureImage = async (imageData: string) => {
     try {
@@ -99,9 +76,7 @@ const Index = () => {
   };
 
   const handleStart = () => {
-    // Check for API key again
-    const hasApiKey = localStorage.getItem('OPENAI_API_KEY') || import.meta.env.VITE_OPENAI_API_KEY;
-    setStep(hasApiKey ? 'camera' : 'apikey');
+    setStep('camera');
   };
 
   return (
