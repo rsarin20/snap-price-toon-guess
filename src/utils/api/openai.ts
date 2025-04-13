@@ -1,12 +1,11 @@
-
 import { PredictionResult } from '../types/prediction';
 
 export async function predictWithOpenAI(base64Image: string): Promise<PredictionResult> {
   // Log to help with debugging
   console.log("Starting OpenAI API call");
   
-  // Hard-coded API key as requested
-  const apiKey = "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";
+  // Updated API key as requested
+  const apiKey = "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";
   
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {

@@ -87,10 +87,9 @@ const Index = () => {
             <h1 className="text-3xl font-extrabold mb-2">
               {step === 'welcome' ? 'PriceSnap' : 
                step === 'camera' ? 'Take a Photo' : 
-               step === 'apikey' ? 'OpenAI Setup' :
                'Price Prediction'}
             </h1>
-            {step !== 'welcome' && step !== 'apikey' && (
+            {step !== 'welcome' && (
               <p className="text-gray-600">
                 {step === 'camera' 
                   ? 'Snap a clear photo of any object' 
@@ -102,44 +101,6 @@ const Index = () => {
           <main>
             {step === 'welcome' && (
               <WelcomeScreen onStart={handleStart} />
-            )}
-
-            {step === 'apikey' && (
-              <div className="flex flex-col items-center text-center max-w-md mx-auto">
-                <div className="mb-6">
-                  <div className="w-full p-4 bg-cartoon-blue rounded-2xl cartoon-border cartoon-shadow">
-                    <h2 className="text-lg font-bold mb-2">OpenAI API Key Required</h2>
-                    <p className="text-sm mb-4">To use the vision models for more accurate price prediction, please enter your API key.</p>
-                    
-                    <form onSubmit={handleApiKeySubmit} className="space-y-4">
-                      <Input 
-                        type="password"
-                        placeholder="Enter your API key"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        className="cartoon-border"
-                      />
-                      <Button 
-                        type="submit"
-                        className="w-full h-10 font-bold bg-primary hover:bg-primary/80 cartoon-border cartoon-shadow"
-                      >
-                        Save API Key
-                      </Button>
-                      <p className="text-xs text-gray-500">
-                        Your API key will be stored in your browser's local storage.
-                      </p>
-                    </form>
-                  </div>
-                </div>
-                
-                <Button 
-                  onClick={() => setStep('welcome')}
-                  className="w-full h-10 font-bold bg-secondary hover:bg-secondary/80 cartoon-border cartoon-shadow"
-                  variant="secondary"
-                >
-                  Skip (Use Fallback AI)
-                </Button>
-              </div>
             )}
             
             {step === 'camera' && (
