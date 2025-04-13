@@ -23,7 +23,7 @@ export async function predictPrice(imageData: string): Promise<PredictionResult>
 }
 
 // Function to set a custom API key
-export function setCustomApiKey(apiKey: string): void {
+export function setCustomApiKey(apiKey: string): boolean {
   if (apiKey && apiKey.trim() !== '') {
     storeApiKey(apiKey.trim());
     return true;
